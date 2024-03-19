@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "upgrade.sample.mif",
+      "sha256_cert_fingerprints": [
+        "00:B7:48:7F:1B:93:72:60:86:BD:5B:77:CF:2F:26:A2:2E:76:FB:8C:F1:B5:69:13:8F:E6:50:20:E0:1B:82:B7"
+      ]
+    }
+  }
+]

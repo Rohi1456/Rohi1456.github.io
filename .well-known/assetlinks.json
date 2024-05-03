@@ -1,14 +1,51 @@
 [
-  {
-    "relation": [
-      "delegate_permission/common.handle_all_urls"
-    ],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "upgrade.sample.mif",
-      "sha256_cert_fingerprints": [
-        "00:B7:48:7F:1B:93:72:60:86:BD:5B:77:CF:2F:26:A2:2E:76:FB:8C:F1:B5:69:13:8F:E6:50:20:E0:1B:82:B7"
-      ]
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.sportsinteraction.roc.app",
+            "sha256_cert_fingerprints": [
+                "C9:EE:CC:0D:76:91:A6:C2:40:FF:82:32:91:34:A0:34:EF:B9:1E:A5:BB:CF:27:01:8A:BF:24:A9:19:99:93:61"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.sportsinteraction.canada.app.beta",
+            "sha256_cert_fingerprints": [
+                "09:1A:EE:E6:7F:0D:EF:25:3A:57:37:CA:71:C2:A3:58:26:E0:11:7D:9F:A9:58:70:99:24:EE:79:01:89:0A:5D"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.sportsinteraction.app.beta",
+            "sha256_cert_fingerprints": [
+                "09:1A:EE:E6:7F:0D:EF:25:3A:57:37:CA:71:C2:A3:58:26:E0:11:7D:9F:A9:58:70:99:24:EE:79:01:89:0A:5D"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.sportsinteraction.app",
+            "sha256_cert_fingerprints": [
+                "20:D4:35:34:B1:BE:39:35:B8:F3:C2:6B:88:FC:E7:90:C3:22:FE:92:37:FB:D4:48:B6:E1:05:0E:B4:FA:B6:A2",
+                "C9:EE:CC:0D:76:91:A6:C2:40:FF:82:32:91:34:A0:34:EF:B9:1E:A5:BB:CF:27:01:8A:BF:24:A9:19:99:93:61"
+            ]
+        }
     }
-  }
 ]

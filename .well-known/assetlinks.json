@@ -1,51 +1,15 @@
 [
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "com.sportsinteraction.canada.app",
-            "sha256_cert_fingerprints": [
-                "34:CB:DE:AC:23:85:6A:B6:3E:BD:D2:60:89:A1:2E:72:A6:56:14:78:A0:5B:17:23:16:E3:C5:BF:BA:B0:2B:C4"
-            ]
-        }
-    },
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "com.sportsinteraction.canada.app.beta",
-            "sha256_cert_fingerprints": [
-                "09:1A:EE:E6:7F:0D:EF:25:3A:57:37:CA:71:C2:A3:58:26:E0:11:7D:9F:A9:58:70:99:24:EE:79:01:89:0A:5D"
-            ]
-        }
-    },
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "com.sportsinteraction.app.beta",
-            "sha256_cert_fingerprints": [
-                "09:1A:EE:E6:7F:0D:EF:25:3A:57:37:CA:71:C2:A3:58:26:E0:11:7D:9F:A9:58:70:99:24:EE:79:01:89:0A:5D"
-            ]
-        }
-    },
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "com.sportsinteraction.app",
-            "sha256_cert_fingerprints": [
-                "20:D4:35:34:B1:BE:39:35:B8:F3:C2:6B:88:FC:E7:90:C3:22:FE:92:37:FB:D4:48:B6:E1:05:0E:B4:FA:B6:A2",
-                "34:CB:DE:AC:23:85:6A:B6:3E:BD:D2:60:89:A1:2E:72:A6:56:14:78:A0:5B:17:23:16:E3:C5:BF:BA:B0:2B:C4"
-            ]
-        }
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.playmgm.nj.sports",
+      "sha256_cert_fingerprints": [
+        "A4:C1:59:AA:49:97:AB:7A:00:61:5C:C9:D0:4E:E8:E2:E2:A9:97:98:B7:6E:8C:C6:D0:AB:4B:C8:A7:69:5B:BD"
+      ]
     }
+  }
 ]
+ 

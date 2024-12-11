@@ -1,15 +1,28 @@
 [
+
   {
+
     "relation": [
+
       "delegate_permission/common.handle_all_urls"
+
     ],
+
     "target": {
+
       "namespace": "android_app",
+
       "package_name": "com.playmgm.nj.sports",
+
       "sha256_cert_fingerprints": [
-        "A4:C1:59:AA:49:97:AB:7A:00:61:5C:C9:D0:4E:E8:E2:E2:A9:97:98:B7:6E:8C:C6:D0:AB:4B:C8:A7:69:5B:BD"
+
+        "A4:C1:59:AA:49:97:AB:7A:00:61:5C:C9:D0:4E:E8:E2:E2:A9:97:98:B7:6E:8C:C6:D0:AB:4B:C8:A7:69:5B:BD","41:B5:CD:43:4C:81:DA:0E:62:27:20:37:18:58:53:E7:EB:4D:A1:FD:CF:96:F4:AA:F8:0A:1D:05:62:FA:D3:E2"
+
       ]
+
     }
+
   }
+
 ]
  

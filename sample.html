@@ -1,47 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TWA Messaging Demo</title>
-    <meta charset="UTF-8">
+  <title>TWA Messaging Demo</title>
+  <meta charset="UTF-8">
 </head>
 <body>
-    <h1>TWA Messaging Demo</h1>
-    <input type="text" id="messageInput" placeholder="Enter message">
-    <button onclick="sendMessage()">Send to App</button>
-    <p>Sent to App: <span id="sentMessage"></span></p>
-    <p>Received from App: <span id="receivedMessage"></span></p>
+  <h1>TWA Messaging Demo</h1>
+  <input type="text" id="messageInput" placeholder="Enter message">
+  <button onclick="sendMessage()">Send to App</button>
+  <p>Sent to App: <span id="sentMessage"></span></p>
+  <p>Received from App: <span id="receivedMessage"></span></p>
 
-    <script>
-        console.log('Script loaded');
+  <script>
+    console.log('Script loaded');
 
-        window.addEventListener('message', (event) => {
-            console.log('Message received from app:', event.data, 'Origin:', event.origin);
-            const receivedSpan = document.getElementById('receivedMessage');
-            receivedSpan.textContent = "Echo: " + event.data;
-        });
+    let channel = null;
 
-        function sendMessage() {
-            try {
-                console.log('Button clicked, attempting sendMessage');
-                const message = document.getElementById('messageInput').value;
-                if (message) {
-                    console.log('Sending message to app:', message);
-                    window.postMessage(message, '*');
-                    console.log('Message sent to app:', message);
-                    document.getElementById('sentMessage').textContent = message;
-                    document.getElementById('messageInput').value = '';
-                } else {
-                    console.log('No message to send');
-                }
-            } catch (e) {
-                console.error('Error in sendMessage:', e);
-                alert('Error: ' + e.message);
-            }
-        }
+    navigator.serviceWorker.ready.then(registration => {
+      if (!navigator.serviceWorker.controller) {
+        console.log('No service worker controller found!');
+        return;
+      }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM fully loaded');
-        });
-    </script>
+      // Listen for messages from Android
+      navigator.serviceWorker.addEventListener('message', event => {
+        console.log('Received message from Android:', event.data);
+        document.getElementById('receivedMessage').textContent = event.data;
+      });
+
+      console.log('Sending "ACK" to Android to confirm channel');
+      // Initial ping to let Android know we're ready
+      navigator.serviceWorker.controller.postMessage("ACK from Web");
+    });
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      if (message && navigator.serviceWorker.controller) {
+        console.log('Sending message to Android:', message);
+        navigator.serviceWorker.controller.postMessage(message);
+        document.getElementById('sentMessage').textContent = message;
+        document.getElementById('messageInput').value = '';
+      } else {
+        alert('Service worker not ready');
+      }
+    }
+  </script>
 </body>
 </html>

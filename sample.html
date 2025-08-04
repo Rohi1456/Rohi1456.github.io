@@ -9,14 +9,15 @@
   <button id="sendToApp">Send to Android App</button>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
+      navigator.serviceWorker.register('/sw.js')
         .then(reg => {
           console.log('Service Worker registered:', reg);
 
-          if (navigator.serviceWorker.controller) {
-            console.log('Service worker controller found');
+          if (!navigator.serviceWorker.controller) {
+            console.log('No controller yet. Reloading...');
+            window.location.reload();
           } else {
-            console.log('No controller yet. Page needs reload.');
+            console.log('Service worker controller found');
           }
         })
         .catch(err => {
@@ -42,7 +43,6 @@
       }
     });
 
-    // For postMessage from Android
     navigator.serviceWorker.addEventListener('message', event => {
       console.log('Message from Android App:', event.data);
       alert('Received from Android: ' + event.data);

@@ -1,44 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>TWA PostMessage Demo</title>
-  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2em;
+      background: #f4f4f4;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #log {
+      margin-top: 2em;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 1em;
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
 <body>
-  <h1>TWA Bidirectional Messaging</h1>
-  <button id="sendToApp">Send to Android App</button>
+  <h1>Trusted Web Activity Demo</h1>
+  <button id="sendToAndroid">Send Message to Android</button>
+
+  <div id="log"></div>
 
   <script>
+    const log = (msg) => {
+      console.log(msg);
+      document.getElementById('log').textContent += msg + "\n";
+    };
+
+    // Register the service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => {
-          console.log('SW registered:', reg);
+          log('✅ Service Worker registered.');
+
           if (!navigator.serviceWorker.controller) {
-            console.warn('No controller, reloading...');
-            location.reload(); // required to activate controller
+            log('⚠️ No controller yet. Reloading...');
+            location.reload(); // Force page to be controlled by SW
+          } else {
+            log('✅ Service Worker controller is active.');
           }
-        }).catch(err => console.error('SW registration failed:', err));
+        })
+        .catch(err => log('❌ Service Worker registration failed: ' + err));
     }
 
-    document.getElementById('sendToApp').addEventListener('click', () => {
-      if (navigator.serviceWorker.controller) {
-        const msg = 'Hello from Web!';
-        const channel = new MessageChannel();
+    // Listen for messages from Android/Native App
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      log('📥 Received from Android: ' + event.data);
+      alert('From Android: ' + event.data);
+    });
 
-        channel.port1.onmessage = event => {
-          console.log('Reply from Android or SW:', event.data);
+    // Send a message to Android via SW
+    document.getElementById('sendToAndroid').addEventListener('click', () => {
+      if (navigator.serviceWorker.controller) {
+        const messageChannel = new MessageChannel();
+
+        messageChannel.port1.onmessage = (event) => {
+          log('📤 Reply from Android or SW: ' + event.data);
           alert('Reply: ' + event.data);
         };
 
-        navigator.serviceWorker.controller.postMessage(msg, [channel.port2]);
+        const msg = 'Hello from Web!';
+        navigator.serviceWorker.controller.postMessage(msg, [messageChannel.port2]);
+        log('📤 Sent to Android: ' + msg);
       } else {
-        alert('Service Worker not ready. Please reload.');
+        alert('Service Worker not ready yet. Reload the page.');
       }
-    });
-
-    navigator.serviceWorker.addEventListener('message', event => {
-      console.log('Message from Android (via SW):', event.data);
-      alert('Android says: ' + event.data);
     });
   </script>
 </body>

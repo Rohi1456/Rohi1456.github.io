@@ -15,7 +15,33 @@
         console.log('Script loaded');
 
         window.addEventListener('message', (event) => {
-            // Relax origin check for TWA compatibility
-            console.log('Message from app received:', event.data, 'Origin:', event.origin);
+            console.log('Message received from app:', event.data, 'Origin:', event.origin);
             const receivedSpan = document.getElementById('receivedMessage');
-            receivedSpan.textContent = "
+            receivedSpan.textContent = "Echo: " + event.data;
+        });
+
+        function sendMessage() {
+            try {
+                console.log('Button clicked, attempting sendMessage');
+                const message = document.getElementById('messageInput').value;
+                if (message) {
+                    console.log('Sending message to app:', message);
+                    window.postMessage(message, '*');
+                    console.log('Message sent to app:', message);
+                    document.getElementById('sentMessage').textContent = message;
+                    document.getElementById('messageInput').value = '';
+                } else {
+                    console.log('No message to send');
+                }
+            } catch (e) {
+                console.error('Error in sendMessage:', e);
+                alert('Error: ' + e.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+        });
+    </script>
+</body>
+</html>

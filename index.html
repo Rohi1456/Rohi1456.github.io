@@ -1,117 +1,47 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>Cashier</title>
-  <link rel="manifest" href="manifest.json" />
-  <script>
-    var port = undefined;
-
-    window.addEventListener("message", function (event) {
-      port = event.ports[0];
-      if (typeof port === 'undefined') {
-        console.error("No port received in message event");
-        return;
-      }
-      console.log("Port initialized");
-      document.getElementById("portValue").value = "Port set";
-
-      // Send initial message to app
-      port.postMessage(JSON.stringify({
-        "eventName": "ON_PAGE_LOAD",
-        "parameters": {"URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en"}
-      }));
-
-      // Set up a single onmessage handler
-      port.onmessage = function(event) {
-        console.log("[Web] Received message from app: " + event.data);
-        document.getElementById("receivedMessage").innerText = "Last message: " + event.data;
-      };
-    });
-
-    function myFunction1() {
-      if (port) {
-        port.postMessage(JSON.stringify({
-          "eventName": "ON_PAGE_LOAD1",
-          "parameters": {"URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en"}
-        }));
-      } else {
-        console.error("Port not initialized");
-      }
+  <title>Camera Permission & Capture</title>
+  <style>
+    video, canvas {
+      display: block;
+      margin: 10px auto;
+      border: 1px solid #ccc;
     }
-
-    function myFunction2() {
-      if (port) {
-        port.postMessage(JSON.stringify({
-          "eventName": "ON_PAGE_LOAD2",
-          "parameters": {"URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en"}
-        }));
-      } else {
-        console.error("Port not initialized");
-      }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
     }
-
-    function myFunction3() {
-      if (port) {
-        port.postMessage(JSON.stringify({
-          "eventName": "ON_PAGE_LOAD3",
-          "parameters": {"URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en"}
-        }));
-      } else {
-        console.error("Port not initialized");
-      }
-    }
-
-    function checkPort() {
-      console.log("Port status: ", port ? "Initialized" : "Not initialized");
-    }
-  </script>
+  </style>
 </head>
 <body>
-  <button onclick="myFunction1()">Click me 1</button>
-  <button onclick="myFunction2()">Click me 2</button>
-  <button onclick="myFunction3()">Click me 3</button>
-  <button onclick="checkPort()">Check Port</button>
-  <input type="hidden" id="portValue" name="portValue" value="Not set" />
-  <div id="receivedMessage">Last message: None</div>
+
+  <h2 style="text-align:center;">Camera Preview & Capture</h2>
+  <video id="video" width="320" height="240" autoplay></video>
+  <button id="captureBtn">Take Photo</button>
+  <canvas id="canvas" width="320" height="240"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const ctx = canvas.getContext('2d');
+
+    // Request camera access
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        alert("Camera access denied or not available: " + err.message);
+      });
+
+    // Capture image on button click
+    captureBtn.addEventListener('click', () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    });
+  </script>
+
 </body>
 </html>

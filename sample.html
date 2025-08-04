@@ -12,8 +12,11 @@
     <p>Received from App: <span id="receivedMessage"></span></p>
 
     <script>
+        // Test if script loads
+        console.log('Script loaded');
+
         window.addEventListener('message', (event) => {
-            if (event.origin !== 'https://rohi1456.github.io') return; // Match TWA_URL domain
+            if (event.origin !== 'https://rohi1456.github.io') return;
             const sentSpan = document.getElementById('sentMessage');
             const receivedSpan = document.getElementById('receivedMessage');
             sentSpan.textContent = event.data;
@@ -22,21 +25,28 @@
         });
 
         function sendMessage() {
-            const message = document.getElementById('messageInput').value;
-            if (message) {
-                console.log('Attempting to send message to app:', message);
-                try {
-                    window.postMessage(message, 'https://rohi1456.github.io'); // Match TWA_URL domain
+            try {
+                console.log('Button clicked, attempting sendMessage');
+                const message = document.getElementById('messageInput').value;
+                if (message) {
+                    console.log('Attempting to send message to app:', message);
+                    window.postMessage(message, 'https://rohi1456.github.io');
                     console.log('Message sent to app:', message);
                     document.getElementById('sentMessage').textContent = message;
                     document.getElementById('messageInput').value = '';
-                } catch (e) {
-                    console.error('Error sending message:', e);
+                } else {
+                    console.log('No message to send');
                 }
-            } else {
-                console.log('No message to send');
+            } catch (e) {
+                console.error('Error in sendMessage:', e);
+                alert('Error: ' + e.message); // Alert to notify user
             }
         }
+
+        // Test DOM readiness
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+        });
     </script>
 </body>
 </html>

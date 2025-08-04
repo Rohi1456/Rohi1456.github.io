@@ -2,76 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TWA PostMessage Demo</title>
+  <title>TWA Bidirectional Demo</title>
   <style>
     body {
-      font-family: sans-serif;
-      margin: 2em;
-      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      background-color: #eef2f5;
+      padding: 2em;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+    }
+    .section {
+      margin-bottom: 2em;
+      padding: 1em;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 0.8em;
+      margin: 0.5em 0;
+      font-size: 14px;
     }
     button {
-      padding: 1em 2em;
-      font-size: 16px;
+      padding: 0.8em 1.5em;
+      background-color: #007bff;
+      border: none;
+      color: #fff;
+      font-size: 14px;
       cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
     #log {
-      margin-top: 2em;
-      white-space: pre-wrap;
-      background: #fff;
+      background-color: #f9f9f9;
       padding: 1em;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
+      min-height: 100px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h1>Trusted Web Activity Demo</h1>
-  <button id="sendToAndroid">Send Message to Android</button>
+  <h1>Android ↔ Web Communication</h1>
 
-  <div id="log"></div>
+  <div class="section">
+    <h2>🔁 Web to Android</h2>
+    <input type="text" id="webMessage" placeholder="Enter message to send to Android App">
+    <button id="sendToAndroid">Send to Android App</button>
+  </div>
+
+  <div class="section">
+    <h2>📩 Messages Received</h2>
+    <div id="log">Waiting for messages...</div>
+  </div>
 
   <script>
-    const log = (msg) => {
+    const log = msg => {
       console.log(msg);
-      document.getElementById('log').textContent += msg + "\n";
+      const logBox = document.getElementById('log');
+      logBox.textContent += '\n' + msg;
     };
 
-    // Register the service worker
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => {
-          log('✅ Service Worker registered.');
-
+          log('✅ Service Worker registered');
           if (!navigator.serviceWorker.controller) {
-            log('⚠️ No controller yet. Reloading...');
-            location.reload(); // Force page to be controlled by SW
-          } else {
-            log('✅ Service Worker controller is active.');
+            log('⏳ No controller yet. Reloading...');
+            location.reload();
           }
         })
-        .catch(err => log('❌ Service Worker registration failed: ' + err));
+        .catch(err => log('❌ SW registration failed: ' + err));
     }
 
-    // Listen for messages from Android/Native App
-    navigator.serviceWorker.addEventListener('message', (event) => {
-      log('📥 Received from Android: ' + event.data);
+    // Handle Android → Web messages
+    navigator.serviceWorker.addEventListener('message', event => {
+      log('📥 From Android: ' + event.data);
       alert('From Android: ' + event.data);
     });
 
-    // Send a message to Android via SW
+    // Web → Android
     document.getElementById('sendToAndroid').addEventListener('click', () => {
+      const message = document.getElementById('webMessage').value.trim();
+      if (!message) return alert('Please enter a message.');
+
       if (navigator.serviceWorker.controller) {
-        const messageChannel = new MessageChannel();
-
-        messageChannel.port1.onmessage = (event) => {
-          log('📤 Reply from Android or SW: ' + event.data);
-          alert('Reply: ' + event.data);
+        const channel = new MessageChannel();
+        channel.port1.onmessage = e => {
+          log('📤 Reply: ' + e.data);
+          alert('Reply: ' + e.data);
         };
-
-        const msg = 'Hello from Web!';
-        navigator.serviceWorker.controller.postMessage(msg, [messageChannel.port2]);
-        log('📤 Sent to Android: ' + msg);
+        navigator.serviceWorker.controller.postMessage(message, [channel.port2]);
+        log('📤 Sent to Android: ' + message);
       } else {
-        alert('Service Worker not ready yet. Reload the page.');
+        alert('Service Worker not ready. Please reload the page.');
       }
     });
   </script>

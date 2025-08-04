@@ -1,109 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TWA Bidirectional Demo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #eef2f5;
-      padding: 2em;
-      line-height: 1.6;
-    }
-    h1 {
-      color: #333;
-    }
-    .section {
-      margin-bottom: 2em;
-      padding: 1em;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    textarea, input[type="text"] {
-      width: 100%;
-      padding: 0.8em;
-      margin: 0.5em 0;
-      font-size: 14px;
-    }
-    button {
-      padding: 0.8em 1.5em;
-      background-color: #007bff;
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #log {
-      background-color: #f9f9f9;
-      padding: 1em;
-      border: 1px solid #ddd;
-      min-height: 100px;
-      white-space: pre-wrap;
-    }
-  </style>
-</head>
-<body>
-  <h1>Android ↔ Web Communication</h1>
-
-  <div class="section">
-    <h2>🔁 Web to Android</h2>
-    <input type="text" id="webMessage" placeholder="Enter message to send to Android App">
-    <button id="sendToAndroid">Send to Android App</button>
-  </div>
-
-  <div class="section">
-    <h2>📩 Messages Received</h2>
-    <div id="log">Waiting for messages...</div>
-  </div>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Send Message to Native</title>
   <script>
-    const log = msg => {
-      console.log(msg);
-      const logBox = document.getElementById('log');
-      logBox.textContent += '\n' + msg;
-    };
-
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-          log('✅ Service Worker registered');
-          if (!navigator.serviceWorker.controller) {
-            log('⏳ No controller yet. Reloading...');
-            location.reload();
-          }
-        })
-        .catch(err => log('❌ SW registration failed: ' + err));
+    function sendMessageToNative() {
+      const msg = encodeURIComponent(document.getElementById('messageBox').value);
+      const intentUri = `intent://send-message?text=${msg}#Intent;scheme=myapp;package=com.example.twaintentdemo;end`;
+      window.location.href = intentUri;
     }
-
-    // Handle Android → Web messages
-    navigator.serviceWorker.addEventListener('message', event => {
-      log('📥 From Android: ' + event.data);
-      alert('From Android: ' + event.data);
-    });
-
-    // Web → Android
-    document.getElementById('sendToAndroid').addEventListener('click', () => {
-      const message = document.getElementById('webMessage').value.trim();
-      if (!message) return alert('Please enter a message.');
-
-      if (navigator.serviceWorker.controller) {
-        const channel = new MessageChannel();
-        channel.port1.onmessage = e => {
-          log('📤 Reply: ' + e.data);
-          alert('Reply: ' + e.data);
-        };
-        navigator.serviceWorker.controller.postMessage(message, [channel.port2]);
-        log('📤 Sent to Android: ' + message);
-      } else {
-        alert('Service Worker not ready. Please reload the page.');
-      }
-    });
   </script>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+  <h2>Send Message to Native App</h2>
+  <input type="text" id="messageBox" placeholder="Enter your message" style="width: 100%; padding: 8px;" />
+  <button onclick="sendMessageToNative()" style="margin-top: 10px; padding: 10px 15px;">
+    Send to Native
+  </button>
 </body>
 </html>

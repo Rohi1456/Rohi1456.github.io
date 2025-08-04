@@ -8,7 +8,7 @@
   <script>
     function sendMessageToNative() {
       const msg = encodeURIComponent(document.getElementById('messageBox').value);
-      const intentUri = `intent://send-message?text=${msg}#Intent;scheme=myapp;package=com.ivy.twapoc;end`;
+      const intentUri = `"intent://send-message?text=${msg}#Intent;scheme=myapp;package=com.ivy.twapoc;end";
       window.location.href = intentUri;
     }
   </script>

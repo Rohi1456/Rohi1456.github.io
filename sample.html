@@ -1,51 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TWA Message Demo</title>
+  <title>TWA PostMessage Demo</title>
   <meta charset="UTF-8" />
 </head>
 <body>
-  <h1>TWA PostMessage Demo</h1>
+  <h1>TWA Bidirectional Messaging</h1>
   <button id="sendToApp">Send to Android App</button>
+
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => {
-          console.log('Service Worker registered:', reg);
-
+          console.log('SW registered:', reg);
           if (!navigator.serviceWorker.controller) {
-            console.log('No controller yet. Reloading...');
-            window.location.reload();
-          } else {
-            console.log('Service worker controller found');
+            console.warn('No controller, reloading...');
+            location.reload(); // required to activate controller
           }
-        })
-        .catch(err => {
-          console.error('Service Worker registration failed:', err);
-        });
+        }).catch(err => console.error('SW registration failed:', err));
     }
 
     document.getElementById('sendToApp').addEventListener('click', () => {
       if (navigator.serviceWorker.controller) {
-        const messageChannel = new MessageChannel();
+        const msg = 'Hello from Web!';
+        const channel = new MessageChannel();
 
-        messageChannel.port1.onmessage = (event) => {
-          console.log('Received from Android:', event.data);
-          alert('Message from Android: ' + event.data);
+        channel.port1.onmessage = event => {
+          console.log('Reply from Android or SW:', event.data);
+          alert('Reply: ' + event.data);
         };
 
-        navigator.serviceWorker.controller.postMessage(
-          'Hello from Web!',
-          [messageChannel.port2]
-        );
+        navigator.serviceWorker.controller.postMessage(msg, [channel.port2]);
       } else {
-        alert('Service Worker not ready. Please reload the page.');
+        alert('Service Worker not ready. Please reload.');
       }
     });
 
     navigator.serviceWorker.addEventListener('message', event => {
-      console.log('Message from Android App:', event.data);
-      alert('Received from Android: ' + event.data);
+      console.log('Message from Android (via SW):', event.data);
+      alert('Android says: ' + event.data);
     });
   </script>
 </body>

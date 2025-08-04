@@ -13,7 +13,7 @@
 
     <script>
         window.addEventListener('message', (event) => {
-            if (event.origin !== 'https://34345.github.io') return;
+            if (event.origin !== 'https://rohi1456.github.io') return; // Match TWA_URL domain
             const sentSpan = document.getElementById('sentMessage');
             const receivedSpan = document.getElementById('receivedMessage');
             sentSpan.textContent = event.data;
@@ -24,10 +24,15 @@
         function sendMessage() {
             const message = document.getElementById('messageInput').value;
             if (message) {
-                console.log('Sending message to app:', message);
-                window.postMessage(message, 'https://34345.github.io');
-                document.getElementById('sentMessage').textContent = message;
-                document.getElementById('messageInput').value = '';
+                console.log('Attempting to send message to app:', message);
+                try {
+                    window.postMessage(message, 'https://rohi1456.github.io'); // Match TWA_URL domain
+                    console.log('Message sent to app:', message);
+                    document.getElementById('sentMessage').textContent = message;
+                    document.getElementById('messageInput').value = '';
+                } catch (e) {
+                    console.error('Error sending message:', e);
+                }
             } else {
                 console.log('No message to send');
             }

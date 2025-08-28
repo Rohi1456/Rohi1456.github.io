@@ -3,7 +3,7 @@
           "relation": ["delegate_permission/common.handle_all_urls", "delegate_permission/common.use_as_origin"],
         "target": {
             "namespace": "android_app",
-            "package_name": "com.ivy.twapoc",
+            "package_name": "com.sportingbet.sportsbook.br",
             "sha256_cert_fingerprints": [
                 "24:15:6D:2E:3C:BF:32:2F:3C:F8:51:0D:E9:2A:50:F3:FE:86:94:13:2A:C6:86:2D:32:62:59:99:F4:48:C8:CB"
             ]

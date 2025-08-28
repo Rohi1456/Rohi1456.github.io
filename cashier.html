@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Cashier</title>
+    <script>
+        // --- Global port variable ---
+        var port = null;
+
+        // --- 1️⃣ Setup message channel ---
+        window.addEventListener("message", function(event) {
+            // Check if a MessageChannel port exists
+            if (event.ports && event.ports[0]) {
+                port = event.ports[0];
+
+                // Notify native that page has loaded
+                messageToNative(JSON.stringify({
+                    eventName: "ON_PAGE_LOAD",
+                    parameters: { URL: window.location.href }
+                }));
+
+                // Listen for messages from native
+                port.onmessage = function(event) {
+                    messageToWeb(event.data);
+                };
+            }
+        });
+
+        // --- 2️⃣ Web → Native ---
+        function messageToNative(json) {
+            if (port) {
+                port.postMessage(json);
+            } else {
+                // fallback to parent.postMessage if port not available
+                window.parent.postMessage(json, "*");
+            }
+        }
+
+        // --- 3️⃣ Native → Web ---
+        function messageToWeb(json) {
+            console.log("Message from native:", json);
+            // Add your custom JS logic to handle native messages here
+        }
+
+        // --- 4️⃣ Button handlers ---
+        function myFunction1() {
+            messageToNative(JSON.stringify({
+                eventName: "ON_PAGE_LOAD1",
+                parameters: { URL: window.location.href }
+            }));
+        }
+
+        function myFunction2() {
+            messageToNative(JSON.stringify({
+                eventName: "ON_PAGE_LOAD2",
+                parameters: { URL: window.location.href }
+            }));
+        }
+
+        function myFunction3() {
+            messageToNative(JSON.stringify({
+                eventName: "ON_PAGE_LOAD3",
+                parameters: { URL: window.location.href }
+            }));
+        }
+    </script>
+</head>
+<body>
+<h1>TWA CCB POC</h1>
+<button onclick="myFunction1()">Click me 1</button>
+<button onclick="myFunction2()">Click me 2</button>
+<button onclick="myFunction3()">Click me 3</button>
+<input type="hidden" id="portValue" name="portValue" value="" />
+</body>
+</html>

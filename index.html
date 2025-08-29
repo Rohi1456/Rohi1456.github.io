@@ -6,31 +6,24 @@
     <link rel="manifest" href="manifest.json" />
     <script>
         var port = undefined;
-
-        // This flag ensures the port is ready before we try to use it.
         var isPortReady = false;
 
         window.addEventListener("message", function (event) {
-            // Get the port from the event.
             port = event.ports[0];
-
             if (typeof port === 'undefined') return;
 
-            // Set the ready flag.
             isPortReady = true;
 
-            // Post the initial message on this port.
+            // This is the first message from the TWA. We now know the channel is open.
+            // You can optionally reply to the TWA to acknowledge.
             port.postMessage(JSON.stringify({"eventName": "ON_PAGE_LOAD"}));
 
-            // Receive upcoming messages on this port. Do this only once.
             port.onmessage = function(event) {
                 console.log("[PostMessage1] Got message: " + event.data);
             };
         });
 
-        // Function for button click.
         function myFunction1() {
-            // Check if the port is ready before sending a message.
             if (isPortReady) {
                 port.postMessage(JSON.stringify({"eventName": "ON_BUTTON_CLICK"}));
             } else {
@@ -40,6 +33,7 @@
     </script>
 </head>
 <body>
-    <button onclick="myFunction1()">Click me</button>
+    <h1>TWA Communication Test</h1>
+    <button onclick="myFunction1()">Click me to send message</button>
 </body>
 </html>

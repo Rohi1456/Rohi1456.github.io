@@ -14,8 +14,6 @@
 
             isPortReady = true;
 
-            // This is the initial message from the TWA.
-            // You can optionally reply to the TWA to acknowledge.
             port.postMessage(JSON.stringify({"eventName": "ON_PAGE_LOAD"}));
 
             port.onmessage = function(event) {
@@ -33,6 +31,7 @@
     </script>
 </head>
 <body>
-    <button onclick="myFunction1()">Click me</button>
+    <h1>TWA Communication Test</h1>
+    <button onclick="myFunction1()">Click me to send message</button>
 </body>
 </html>

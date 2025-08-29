@@ -1,70 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Capture</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-        }
-        #video, #canvas {
-            border: 2px solid #333;
-            margin: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <video id="video" width="640" height="480" autoplay></video>
-    <button onclick="takePhoto()">Take Photo</button>
-    <canvas id="canvas" width="640" height="480"></canvas>
-
+    <meta charset="utf-8">
+    <title>Cashier</title>
+    <link rel="manifest" href="manifest.json" />
     <script>
-        // Get access to the camera
-        async function startCamera() {
-            const video = document.getElementById('video');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true
-                });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Error accessing the camera: ", err);
-                alert("Could not access the camera. Please check permissions.");
+        var port = undefined;
+
+        // This flag ensures the port is ready before we try to use it.
+        var isPortReady = false;
+
+        window.addEventListener("message", function (event) {
+            // Get the port from the event.
+            port = event.ports[0];
+
+            if (typeof port === 'undefined') return;
+
+            // Set the ready flag.
+            isPortReady = true;
+
+            // Post the initial message on this port.
+            port.postMessage(JSON.stringify({"eventName": "ON_PAGE_LOAD"}));
+
+            // Receive upcoming messages on this port. Do this only once.
+            port.onmessage = function(event) {
+                console.log("[PostMessage1] Got message: " + event.data);
+            };
+        });
+
+        // Function for button click.
+        function myFunction1() {
+            // Check if the port is ready before sending a message.
+            if (isPortReady) {
+                port.postMessage(JSON.stringify({"eventName": "ON_BUTTON_CLICK"}));
+            } else {
+                console.error("Port is not ready. Cannot send message.");
             }
         }
-
-        // Take a photo when the button is clicked
-        function takePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-
-            // Draw the current video frame to the canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Optionally, you can get the image data
-            const imageData = canvas.toDataURL('image/png');
-            console.log("Photo taken:", imageData);
-        }
-
-        // Start the camera when the page loads
-        window.onload = startCamera;
     </script>
+</head>
+<body>
+    <button onclick="myFunction1()">Click me</button>
 </body>
 </html>

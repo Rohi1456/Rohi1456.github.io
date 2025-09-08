@@ -18,7 +18,8 @@
           },
           (err) => {
             document.getElementById('output').textContent = 'Error: ' + err.message;
-          }
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
         );
       } else {
         document.getElementById('output').textContent = 'Geolocation not supported.';

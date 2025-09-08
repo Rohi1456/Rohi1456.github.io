@@ -1,29 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Get Location</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geolocation Test for TWA</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #output { margin-top: 20px; font-weight: bold; }
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
 </head>
 <body>
-  <h1>Location Test</h1>
-  <button onclick="getLocation()">Get Location</button>
-  <p id="output"></p>
+  <h1>TWA Geolocation Test</h1>
+  <button id="btnGetLocation">Get Location</button>
+  <p id="output">Click the button to get your location.</p>
 
   <script>
-    function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            document.getElementById('output').textContent =
-              'Lat: ' + pos.coords.latitude + ', Lon: ' + pos.coords.longitude;
-          },
-          (err) => {
-            document.getElementById('output').textContent = 'Error: ' + err.message;
-          },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-        );
-      } else {
-        document.getElementById('output').textContent = 'Geolocation not supported.';
+    const output = document.getElementById('output');
+    const button = document.getElementById('btnGetLocation');
+
+    button.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        output.textContent = 'Geolocation is not supported by this browser.';
+        return;
       }
+
+      output.textContent = 'Requesting location...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const accuracy = pos.coords.accuracy;
+          output.textContent = `Latitude: ${lat}, Longitude: ${lon}, Accuracy: ${accuracy} meters`;
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          switch(err.code) {
+            case err.PERMISSION_DENIED:
+              output.textContent = 'Error: Permission denied. Please allow location access.';
+              break;
+            case err.POSITION_UNAVAILABLE:
+              output.textContent = 'Error: Position unavailable.';
+              break;
+            case err.TIMEOUT:
+              output.textContent = 'Error: Location request timed out.';
+              break;
+            default:
+              output.textContent = 'Error: ' + err.message;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000
+        }
+      );
+    });
+
+    // Optional: Check if location permission is granted in Chrome
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(result => {
+        console.log('Geolocation permission state:', result.state);
+      });
     }
   </script>
 </body>

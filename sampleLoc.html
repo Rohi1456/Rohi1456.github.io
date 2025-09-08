@@ -15,7 +15,7 @@
     <h1>TWA Geolocation Test</h1>
     <button id="btnCheckPermission">Check Permission State</button>
     <button id="btnGetLocation">Get Location</button>
-    <button id="btnResetPermission">Reset Permission (if supported)</button>
+    <button id="btnResetPermission">Reset Permission</button>
     <p id="status">Permission state unknown</p>
     <p id="output">Click buttons to test.</p>
 
@@ -26,15 +26,21 @@
         const btnGet = document.getElementById('btnGetLocation');
         const btnReset = document.getElementById('btnResetPermission');
 
-        // Check permission state
         btnCheck.addEventListener('click', () => {
             if (navigator.permissions && navigator.permissions.query) {
                 navigator.permissions.query({ name: 'geolocation' }).then(result => {
                     status.textContent = `Permission state: ${result.state}`;
                     console.log('Geolocation permission state:', result.state);
+                    if (result.state === 'granted') {
+                        console.log('Delegation successful - no prompt needed');
+                    } else if (result.state === 'prompt') {
+                        console.log('Delegation pending - request will trigger native prompt');
+                    } else {
+                        console.log('Delegation failed - state is denied');
+                    }
                     result.addEventListener('change', () => {
-                        status.textContent = `Permission state changed to: ${result.state}`;
-                        console.log('State changed to:', result.state);  // Should become 'granted' if delegation works
+                        status.textContent = `State changed to: ${result.state}`;
+                        console.log('State changed to:', result.state);
                     });
                 }).catch(err => {
                     console.error('Permission query error:', err);
@@ -42,27 +48,15 @@
                 });
             } else {
                 status.textContent = 'Permissions API not supported';
-                console.log('Permissions API not available');
             }
         });
 
-        // Get location - Auto-trigger if 'prompt' to test delegation
         btnGet.addEventListener('click', () => {
             if (!navigator.geolocation) {
-                output.textContent = 'Geolocation is not supported by this browser.';
-                console.error('Geolocation API not available');
+                output.textContent = 'Geolocation not supported by this browser.';
+                console.error('Geolocation API unavailable');
                 return;
             }
-
-            // Quick check: If prompt, request to trigger delegation/native prompt
-            if (navigator.permissions) {
-                navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                    if (result.state === 'prompt') {
-                        console.log('State is prompt - requesting to trigger delegation prompt');
-                    }
-                });
-            }
-
             output.textContent = 'Requesting location...';
 
             navigator.geolocation.getCurrentPosition(
@@ -74,41 +68,35 @@
                     console.log('Geolocation success:', pos.coords);
                 },
                 (err) => {
-                    console.error('Geolocation error:', err.code, err.message);
+                    console.error('Geolocation error:', err.code, err.message, new Date().toISOString());
                     let msg = '';
                     switch (err.code) {
                         case err.PERMISSION_DENIED:
-                            msg = 'Error: Permission denied (code 1). Clear Chrome site data for rohi1456.github.io and retry. If persists, delegation may be broken - use WebView fallback.';
+                            msg = 'Permission denied (code 1). Clear Chrome site data for rohi1456.github.io and retry. Ensure "Allow all the time" in app settings.';
                             break;
                         case err.POSITION_UNAVAILABLE:
-                            msg = 'Error: Position unavailable. Enable GPS and ensure signal.';
+                            msg = 'Position unavailable - enable GPS and ensure signal.';
                             break;
                         case err.TIMEOUT:
-                            msg = 'Error: Location request timed out.';
+                            msg = 'Request timed out - check signal or increase timeout.';
                             break;
                         default:
-                            msg = 'Error: ' + err.message;
+                            msg = 'Unknown error: ' + err.message;
                     }
                     output.textContent = msg;
                 },
-                {
-                    enableHighAccuracy: true,
-                    maximumAge: 0,
-                    timeout: 20000  // Increased to 20s for delegation delays
-                }
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
             );
         });
 
-        // Reset permission
         btnReset.addEventListener('click', () => {
             if (navigator.permissions && navigator.permissions.query) {
                 navigator.permissions.query({ name: 'geolocation' }).then(result => {
                     if (result.state === 'denied') {
-                        // Note: Can't force reset in JS; advise manual clear
                         status.textContent = 'State denied - clear Chrome site data manually and retry.';
-                        console.log('Manual reset needed');
+                        console.log('Manual reset required due to denied state');
                     } else {
-                        status.textContent = `No reset needed - state is ${result.state}`;
+                        status.textContent = `State: ${result.state} - retry Get Location after clearing data if needed.';
                     }
                 });
             } else {
@@ -119,15 +107,15 @@
         // Auto-check on load
         if (navigator.permissions) {
             navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                status.textContent = `Initial permission state: ${result.state}`;
-                console.log('Initial Geolocation permission state:', result.state);
+                status.textContent = `Initial state: ${result.state}`;
+                console.log('Initial geolocation state:', result.state, new Date().toISOString());
                 if (result.state === 'prompt') {
-                    console.log('Delegation not active - expect prompt or denial on request');
-                } else if (result.state === 'granted') {
-                    console.log('Delegation working!');
+                    console.log('Initial prompt state - request will trigger native prompt if delegation works');
+                } else if (result.state === 'denied') {
+                    console.log('Initial denied state - clear Chrome data');
                 }
             }).catch(err => {
-                console.error('Initial permission query error:', err);
+                console.error('Initial permission query error:', err, new Date().toISOString());
             });
         }
     </script>

@@ -1,0 +1,160 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Test for TWA</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #output { margin-top: 20px; font-weight: bold; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+        #status { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>TWA Geolocation Test</h1>
+    <button id="btnCheckPermission">Check Permission State</button>
+    <button id="btnGetLocation">Get Location</button>
+    <button id="btnResetPermission">Reset Permission (if supported)</button>
+    <p id="status">Permission state unknown</p>
+    <p id="output">Click buttons to test.</p>
+
+    <script>
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        const btnCheck = document.getElementById('btnCheckPermission');
+        const btnGet = document.getElementById('btnGetLocation');
+        const btnReset = document.getElementById('btnResetPermission');
+
+        // Check permission state
+        btnCheck.addEventListener('click', () => {
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                    status.textContent = `Permission state: ${result.state}`;
+                    console.log('Geolocation permission state:', result.state);
+                    result.addEventListener('change', () => {
+                        status.textContent = `Permission state changed to: ${result.state}`;
+                        console.log('State changed:', result.state);
+                    });
+                }).catch(err => {
+                    console.error('Permission query error:', err);
+                    status.textContent = 'Permission query not supported';
+                });
+            } else {
+                status.textContent = 'Permissions API not supported';
+                console.log('Permissions API not available');
+            }
+        });
+
+        // Get location
+        btnGet.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                output.textContent = 'Geolocation is not supported by this browser.';
+                console.error('Geolocation API not available');
+                return;
+            }
+
+            output.textContent = 'Requesting location...';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const accuracy = pos.coords.accuracy;
+                    output.textContent = `Latitude: ${lat}, Longitude: ${lon}, Accuracy: ${accuracy} meters`;
+                    console.log('Geolocation success:', pos.coords);
+                },
+                (err) => {
+                    console.error('Geolocation error:', err.code, err.message);
+                    let msg = '';
+                    switch (err.code) {
+                        case err.PERMISSION_DENIED:
+                            msg = 'Error: Permission denied. Check native app permission, device location services, and Chrome site settings for rohi1456.github.io.';
+                            break;
+                        case err.POSITION_UNAVAILABLE:
+                            msg = 'Error: Position unavailable. Ensure GPS is enabled and you have signal.';
+                            break;
+                        case err.TIMEOUT:
+                            msg = 'Error: Location request timed out. Try increasing timeout.';
+                            break;
+                        default:
+                            msg = 'Error: ' + err.message;
+                    }
+                    output.textContent = msg;
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 15000
+                }
+            );
+        });
+
+        // Reset permission (prompts again if previously denied)
+        btnReset.addEventListener('click', () => {
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                    if (result.state === 'denied') {
+                        status.textContent = 'Permission reset - try Get Location again';
+                        console.log('Permission reset attempted - click Get Location');
+                    } else {
+                        console.log('Cannot reset - state is:', result.state);
+                        status.textContent = `No reset needed - state is ${result.state}`;
+                    }
+                });
+            } else {
+                output.textContent = 'Permissions API not supported - clear Chrome site data manually.';
+            }
+        });
+
+        // Auto-check on load
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                status.textContent = `Initial permission state: ${result.state}`;
+                console.log('Initial Geolocation permission state:', result.state);
+            }).catch(err => {
+                console.error('Initial permission query error:', err);
+            });
+        }
+    </script>
+</body>
+</html>

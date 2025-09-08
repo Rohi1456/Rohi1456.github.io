@@ -7,117 +7,124 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         #output { margin-top: 20px; font-weight: bold; }
-        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+        button:active { background-color: #ddd; } /* Visual click feedback */
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         #status { color: blue; }
+        #testBtn { background-color: yellow; } /* Standout test button */
     </style>
 </head>
 <body>
     <h1>TWA Geolocation Test</h1>
+    <button id="btnTestJS">Test JS (Click Me First!)</button>
     <button id="btnCheckPermission">Check Permission State</button>
     <button id="btnGetLocation">Get Location</button>
     <button id="btnResetPermission">Reset Permission</button>
-    <p id="status">Permission state unknown</p>
-    <p id="output">Click buttons to test.</p>
+    <p id="status">Loading...</p>
+    <p id="output">Click "Test JS" to confirm buttons work.</p>
 
     <script>
-        const output = document.getElementById('output');
-        const status = document.getElementById('status');
-        const btnCheck = document.getElementById('btnCheckPermission');
-        const btnGet = document.getElementById('btnGetLocation');
-        const btnReset = document.getElementById('btnResetPermission');
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded - JS is active!');
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            const btnTest = document.getElementById('btnTestJS');
+            const btnCheck = document.getElementById('btnCheckPermission');
+            const btnGet = document.getElementById('btnGetLocation');
+            const btnReset = document.getElementById('btnResetPermission');
 
-        btnCheck.addEventListener('click', () => {
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                    status.textContent = `Permission state: ${result.state}`;
-                    console.log('Geolocation permission state:', result.state);
-                    if (result.state === 'granted') {
-                        console.log('Delegation successful - no prompt needed');
-                    } else if (result.state === 'prompt') {
-                        console.log('Delegation pending - request will trigger native prompt');
-                    } else {
-                        console.log('Delegation failed - state is denied');
-                    }
-                    result.addEventListener('change', () => {
-                        status.textContent = `State changed to: ${result.state}`;
-                        console.log('State changed to:', result.state);
-                    });
-                }).catch(err => {
-                    console.error('Permission query error:', err);
-                    status.textContent = 'Permission query not supported';
-                });
-            } else {
-                status.textContent = 'Permissions API not supported';
-            }
-        });
-
-        btnGet.addEventListener('click', () => {
-            if (!navigator.geolocation) {
-                output.textContent = 'Geolocation not supported by this browser.';
-                console.error('Geolocation API unavailable');
-                return;
-            }
-            output.textContent = 'Requesting location...';
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    const accuracy = pos.coords.accuracy;
-                    output.textContent = `Latitude: ${lat}, Longitude: ${lon}, Accuracy: ${accuracy} meters`;
-                    console.log('Geolocation success:', pos.coords);
-                },
-                (err) => {
-                    console.error('Geolocation error:', err.code, err.message, new Date().toISOString());
-                    let msg = '';
-                    switch (err.code) {
-                        case err.PERMISSION_DENIED:
-                            msg = 'Permission denied (code 1). Clear Chrome site data for rohi1456.github.io and retry. Ensure "Allow all the time" in app settings.';
-                            break;
-                        case err.POSITION_UNAVAILABLE:
-                            msg = 'Position unavailable - enable GPS and ensure signal.';
-                            break;
-                        case err.TIMEOUT:
-                            msg = 'Request timed out - check signal or increase timeout.';
-                            break;
-                        default:
-                            msg = 'Unknown error: ' + err.message;
-                    }
-                    output.textContent = msg;
-                },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
-            );
-        });
-
-        btnReset.addEventListener('click', () => {
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                    if (result.state === 'denied') {
-                        status.textContent = 'State denied - clear Chrome site data manually and retry.';
-                        console.log('Manual reset required due to denied state');
-                    } else {
-                        status.textContent = `State: ${result.state} - retry Get Location after clearing data if needed.';
-                    }
-                });
-            } else {
-                output.textContent = 'Permissions API not supported - clear Chrome site data manually.';
-            }
-        });
-
-        // Auto-check on load
-        if (navigator.permissions) {
-            navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                status.textContent = `Initial state: ${result.state}`;
-                console.log('Initial geolocation state:', result.state, new Date().toISOString());
-                if (result.state === 'prompt') {
-                    console.log('Initial prompt state - request will trigger native prompt if delegation works');
-                } else if (result.state === 'denied') {
-                    console.log('Initial denied state - clear Chrome data');
-                }
-            }).catch(err => {
-                console.error('Initial permission query error:', err, new Date().toISOString());
+            // Test button - simple alert to confirm clicks
+            btnTest.addEventListener('click', function() {
+                console.log('Test button clicked!');
+                alert('JS and buttons are working! Now try others.');
+                output.textContent = 'JS Test Passed - Buttons functional.';
+                this.style.backgroundColor = 'green';
             });
-        }
+
+            // Check permission
+            btnCheck.addEventListener('click', function() {
+                console.log('Check permission clicked');
+                status.textContent = 'Checking...';
+                if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                        status.textContent = `Permission state: ${result.state}`;
+                        console.log('State:', result.state);
+                        if (result.state === 'prompt') {
+                            console.log('Prompt state - next request should show native prompt if delegation works');
+                        }
+                        result.addEventListener('change', () => {
+                            status.textContent = `State changed to: ${result.state}`;
+                            console.log('State changed:', result.state);
+                        });
+                    }).catch(err => {
+                        console.error('Query error:', err);
+                        status.textContent = 'Query failed: ' + err.message;
+                    });
+                } else {
+                    status.textContent = 'Permissions API not supported';
+                    console.log('No Permissions API');
+                }
+            });
+
+            // Get location
+            btnGet.addEventListener('click', function() {
+                console.log('Get location clicked');
+                if (!navigator.geolocation) {
+                    output.textContent = 'Geolocation not supported';
+                    console.error('No geolocation API');
+                    return;
+                }
+                output.textContent = 'Requesting location... (should prompt if needed)';
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        const accuracy = pos.coords.accuracy;
+                        output.textContent = `Success! Latitude: ${lat}, Longitude: ${lon}, Accuracy: ${accuracy} m`;
+                        console.log('Success:', pos.coords);
+                    },
+                    (err) => {
+                        console.error('Geolocation error:', err.code, err.message);
+                        let msg = '';
+                        switch (err.code) {
+                            case err.PERMISSION_DENIED:
+                                msg = 'Denied (code 1). Clear Chrome site data for rohi1456.github.io. Set app location to "Allow all the time".';
+                                break;
+                            case err.POSITION_UNAVAILABLE:
+                                msg = 'Unavailable - Enable GPS/High accuracy.';
+                                break;
+                            case err.TIMEOUT:
+                                msg = 'Timeout - Check signal.';
+                                break;
+                            default:
+                                msg = 'Error: ' + err.message;
+                        }
+                        output.textContent = msg;
+                    },
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
+            });
+
+            // Reset
+            btnReset.addEventListener('click', function() {
+                console.log('Reset clicked');
+                if (navigator.permissions) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                        if (result.state === 'denied') {
+                            status.textContent = 'Denied - Clear Chrome data manually.';
+                        } else {
+                            status.textContent = `State: ${result.state} - Retry Get Location.`;
+                        }
+                    });
+                } else {
+                    output.textContent = 'Clear Chrome site data manually.';
+                }
+            });
+
+            // Auto-check on load
+            status.textContent = 'JS loaded - Click Test JS first.';
+        });
     </script>
 </body>
 </html>

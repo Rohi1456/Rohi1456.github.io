@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TWA Geolocation Demo</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    body { margin: 0; background: #0b1020; color: #e8ecf1; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 1.4rem; margin: 0 0 12px; }
+    .card { background: #121a34; border: 1px solid #2a365f; border-radius: 14px; padding: 16px 18px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #2a365f; background: #1a2550; color: #e8ecf1; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .pill { font-size: .85rem; padding: 6px 10px; border-radius: 999px; border: 1px solid #2a365f; background: #0e1630; }
+    .ok { color: #9be28f; }
+    .warn { color: #ffd479; }
+    .err { color: #ff9aa2; }
+    pre, code { background: #0e1630; border: 1px solid #2a365f; border-radius: 10px; padding: 10px; overflow: auto; }
+    .muted { color: #9fb3d1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Geolocation Test (TWA + Digital Asset Links)</h1>
+    <div class="card">
+      <div class="row">
+        <button id="btn-request">Request current location</button>
+        <button id="btn-watch">Start watching</button>
+        <button id="btn-clear" disabled>Stop watching</button>
+        <span id="status" class="pill">Idle</span>
+      </div>
+
+      <div class="grid">
+        <div>
+          <h3>Result</h3>
+          <div id="result" class="muted">No data yet.</div>
+        </div>
+        <div>
+          <h3>Last Error</h3>
+          <div id="error" class="muted">None.</div>
+        </div>
+      </div>
+
+      <h3>Details</h3>
+      <pre id="details" class="muted">—</pre>
+
+      <h3>Environment</h3>
+      <ul class="muted">
+        <li>Secure context (HTTPS required): <span id="secure"></span></li>
+        <li>Geolocation supported: <span id="supported"></span></li>
+        <li>Permissions API: <span id="permapi"></span></li>
+        <li>Permission state: <span id="permstate" class="pill">unknown</span></li>
+      </ul>
+    </div>
+
+    <p class="muted" style="margin-top:14px">
+      Tip: In a TWA with <em>Digital Asset Links</em> properly configured and the app having Android location permission,
+      Chrome should reuse that permission and avoid an extra browser prompt.
+    </p>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const btnRequest = $("btn-request");
+    const btnWatch   = $("btn-watch");
+    const btnClear   = $("btn-clear");
+    const statusEl   = $("status");
+    const resultEl   = $("result");
+    const errorEl    = $("error");
+    const detailsEl  = $("details");
+    const secureEl   = $("secure");
+    const supportedEl= $("supported");
+    const permApiEl  = $("permapi");
+    const permStateEl= $("permstate");
+
+    let watchId = null;
+
+    // UI helpers
+    const setStatus = (text, cls) => {
+      statusEl.textContent = text;
+      statusEl.className = "pill " + (cls || "");
+    };
+    const showResult = (pos) => {
+      const { latitude, longitude, accuracy, altitude, heading, speed } = pos.coords;
+      const ts = new Date(pos.timestamp).toLocaleString();
+      resultEl.innerHTML = `
+        <div>Latitude: <b>${latitude}</b></div>
+        <div>Longitude: <b>${longitude}</b></div>
+        <div>Accuracy: <b>${accuracy}m</b></div>
+        <div>Altitude: <b>${altitude ?? "—"}</b></div>
+        <div>Heading: <b>${heading ?? "—"}</b></div>
+        <div>Speed: <b>${speed ?? "—"}</b></div>
+        <div>Timestamp: <b>${ts}</b></div>
+      `;
+      detailsEl.textContent = JSON.stringify(pos, null, 2);
+    };
+    const showError = (err) => {
+      const map = {
+        1: "Permission denied",
+        2: "Position unavailable",
+        3: "Timeout"
+      };
+      errorEl.innerHTML = `<span class="err">${map[err.code] || err.message}</span>`;
+    };
+
+    // Capability / environment display
+    function refreshEnv() {
+      const isSecure = window.isSecureContext;
+      const supported = "geolocation" in navigator;
+      const permApi = !!(navigator.permissions && navigator.permissions.query);
+
+      secureEl.textContent   = isSecure ? "Yes" : "No";
+      supportedEl.textContent= supported ? "Yes" : "No";
+      permApiEl.textContent  = permApi ? "Yes" : "No";
+
+      if (permApi) {
+        navigator.permissions.query({ name: "geolocation" })
+          .then(s => {
+            permStateEl.textContent = s.state;
+            permStateEl.className = "pill " + (s.state === "granted" ? "ok" : s.state === "prompt" ? "warn" : "err");
+            s.onchange = () => {
+              permStateEl.textContent = s.state;
+              permStateEl.className = "pill " + (s.state === "granted" ? "ok" : s.state === "prompt" ? "warn" : "err");
+            };
+          })
+          .catch(() => { /* ignore */ });
+      } else {
+        permStateEl.textContent = "unknown";
+      }
+
+      // Button availability
+      btnRequest.disabled = !supported || !isSecure;
+      btnWatch.disabled   = !supported || !isSecure || watchId !== null;
+      btnClear.disabled   = watchId === null;
+    }
+
+    // Options tuned for mobile accuracy
+    const geoOpts = {
+      enableHighAccuracy: true,
+      timeout: 10000,        // 10s
+      maximumAge: 0
+    };
+
+    // Actions
+    btnRequest.addEventListener("click", () => {
+      if (!navigator.geolocation) return;
+      setStatus("Requesting…", "warn");
+      errorEl.textContent = "None.";
+      navigator.geolocation.getCurrentPosition(
+        pos => { showResult(pos); setStatus("Success", "ok"); refreshEnv(); },
+        err => { showError(err); setStatus("Failed", "err"); refreshEnv(); },
+        geoOpts
+      );
+    });
+
+    btnWatch.addEventListener("click", () => {
+      if (!navigator.geolocation || watchId !== null) return;
+      setStatus("Subscribing…", "warn");
+      errorEl.textContent = "None.";
+      watchId = navigator.geolocation.watchPosition(
+        pos => { showResult(pos); setStatus("Watching", "ok"); refreshEnv(); },
+        err => { showError(err); setStatus("Failed", "err"); clearWatchInternal(); refreshEnv(); },
+        geoOpts
+      );
+      refreshEnv();
+    });
+
+    function clearWatchInternal() {
+      if (watchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+    }
+    btnClear.addEventListener("click", () => {
+      clearWatchInternal();
+      setStatus("Stopped", "");
+      refreshEnv();
+    });
+
+    // Initial render
+    refreshEnv();
+
+    // Proactively call once in case permissions are already granted (typical in TWA with DAL)
+    if (window.isSecureContext && "geolocation" in navigator) {
+      navigator.permissions?.query?.({ name: "geolocation" }).then(s => {
+        if (s.state === "granted") {
+          navigator.geolocation.getCurrentPosition(
+            pos => { showResult(pos); setStatus("Success (auto)", "ok"); refreshEnv(); },
+            err => { showError(err); setStatus("Failed", "err"); refreshEnv(); },
+            geoOpts
+          );
+        }
+      }).catch(() => {});
+    }
+  </script>
+</body>
+</html>

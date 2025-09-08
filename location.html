@@ -1,68 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TWA Location Test</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      text-align: center;
-    }
-    #status {
-      margin: 1rem 0;
-      font-weight: bold;
-      color: #333;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TWA Location Test</title>
+<style>
+  body { font-family: Arial; text-align:center; margin:2rem;}
+  button { padding:10px 20px; font-size:16px; border:none; border-radius:8px; background:#007bff; color:white; cursor:pointer; }
+  button:hover { background:#0056b3; }
+  #status { margin:1rem 0; font-weight:bold; }
+</style>
 </head>
 <body>
-  <h1>Trusted Web Activity Location Demo</h1>
-  <p>Click the button below to get your location:</p>
-  <button onclick="getLocation()">Get Location</button>
-
-  <div id="status">Waiting...</div>
-
-  <script>
-    function getLocation() {
-      const status = document.getElementById("status");
-
-      if (!navigator.geolocation) {
-        status.textContent = "Geolocation is not supported by your browser.";
-        return;
-      }
-
-      status.textContent = "Requesting location...";
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude.toFixed(6);
-          const lon = pos.coords.longitude.toFixed(6);
-          status.textContent = `✅ Location received: Latitude ${lat}, Longitude ${lon}`;
-        },
-        (err) => {
-          status.textContent = `❌ Error: ${err.message}`;
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-  </script>
+<h1>Trusted Web Activity Location Demo</h1>
+<p>Click the button below to get your location:</p>
+<button onclick="getLocation()">Get Location</button>
+<div id="status">Waiting...</div>
+<script>
+function getLocation() {
+  const status = document.getElementById("status");
+  if (!navigator.geolocation) {
+    status.textContent = "Geolocation not supported.";
+    return;
+  }
+  status.textContent = "Requesting location...";
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lon = pos.coords.longitude.toFixed(6);
+      status.textContent = `✅ Latitude: ${lat}, Longitude: ${lon}`;
+    },
+    err => {
+      status.textContent = `❌ Error: ${err.message}`;
+    },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+}
+</script>
 </body>
 </html>

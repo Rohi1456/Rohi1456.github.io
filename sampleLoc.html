@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -73,7 +34,7 @@
                     console.log('Geolocation permission state:', result.state);
                     result.addEventListener('change', () => {
                         status.textContent = `Permission state changed to: ${result.state}`;
-                        console.log('State changed:', result.state);
+                        console.log('State changed to:', result.state);  // Should become 'granted' if delegation works
                     });
                 }).catch(err => {
                     console.error('Permission query error:', err);
@@ -85,12 +46,21 @@
             }
         });
 
-        // Get location
+        // Get location - Auto-trigger if 'prompt' to test delegation
         btnGet.addEventListener('click', () => {
             if (!navigator.geolocation) {
                 output.textContent = 'Geolocation is not supported by this browser.';
                 console.error('Geolocation API not available');
                 return;
+            }
+
+            // Quick check: If prompt, request to trigger delegation/native prompt
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                    if (result.state === 'prompt') {
+                        console.log('State is prompt - requesting to trigger delegation prompt');
+                    }
+                });
             }
 
             output.textContent = 'Requesting location...';
@@ -108,13 +78,13 @@
                     let msg = '';
                     switch (err.code) {
                         case err.PERMISSION_DENIED:
-                            msg = 'Error: Permission denied. Check native app permission, device location services, and Chrome site settings for rohi1456.github.io.';
+                            msg = 'Error: Permission denied (code 1). Clear Chrome site data for rohi1456.github.io and retry. If persists, delegation may be broken - use WebView fallback.';
                             break;
                         case err.POSITION_UNAVAILABLE:
-                            msg = 'Error: Position unavailable. Ensure GPS is enabled and you have signal.';
+                            msg = 'Error: Position unavailable. Enable GPS and ensure signal.';
                             break;
                         case err.TIMEOUT:
-                            msg = 'Error: Location request timed out. Try increasing timeout.';
+                            msg = 'Error: Location request timed out.';
                             break;
                         default:
                             msg = 'Error: ' + err.message;
@@ -124,20 +94,20 @@
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
-                    timeout: 15000
+                    timeout: 20000  // Increased to 20s for delegation delays
                 }
             );
         });
 
-        // Reset permission (prompts again if previously denied)
+        // Reset permission
         btnReset.addEventListener('click', () => {
             if (navigator.permissions && navigator.permissions.query) {
                 navigator.permissions.query({ name: 'geolocation' }).then(result => {
                     if (result.state === 'denied') {
-                        status.textContent = 'Permission reset - try Get Location again';
-                        console.log('Permission reset attempted - click Get Location');
+                        // Note: Can't force reset in JS; advise manual clear
+                        status.textContent = 'State denied - clear Chrome site data manually and retry.';
+                        console.log('Manual reset needed');
                     } else {
-                        console.log('Cannot reset - state is:', result.state);
                         status.textContent = `No reset needed - state is ${result.state}`;
                     }
                 });
@@ -151,6 +121,11 @@
             navigator.permissions.query({ name: 'geolocation' }).then(result => {
                 status.textContent = `Initial permission state: ${result.state}`;
                 console.log('Initial Geolocation permission state:', result.state);
+                if (result.state === 'prompt') {
+                    console.log('Delegation not active - expect prompt or denial on request');
+                } else if (result.state === 'granted') {
+                    console.log('Delegation working!');
+                }
             }).catch(err => {
                 console.error('Initial permission query error:', err);
             });

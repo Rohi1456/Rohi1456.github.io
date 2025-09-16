@@ -1,16 +1,11 @@
 [
     {
-        "relation": [
-            "delegate_permission/common.handle_all_urls",
-            "delegate_permission/common.use_as_origin"
-        ],
+          "relation": ["delegate_permission/common.handle_all_urls", "delegate_permission/common.use_as_origin"],
         "target": {
             "namespace": "android_app",
             "package_name": "com.sportingbet.sportsbook.br",
             "sha256_cert_fingerprints": [
-                "BE:EF:77:E5:62:66:A7:5F:CE:C9:A7:D8:85:98:59:86:87:E6:BB:9A:66:61:A7:68:EA:38:A9:73:18:9F:E1:CD",
-                "1D:D8:8D:27:F6:09:A9:35:13:50:15:99:7D:EA:AA:CC:7C:74:82:95:66:63:01:7D:83:92:48:CF:07:ED:8C:71",
-                "CE:84:5F:B6:60:77:8A:72:43:FA:45:DB:9D:2B:6E:07:78:21:B2:1A:C8:E9:B0:04:C1:B2:F4:2E:07:8D:8E:14",
+                "BE:EF:77:E5:62:66:A7:5F:CE:C9:A7:D8:85:98:59:86:87:E6:BB:9A:66:61:A7:68:EA:38:A9:73:18:9F:E1:CD","1D:D8:8D:27:F6:09:A9:35:13:50:15:99:7D:EA:AA:CC:7C:74:82:95:66:63:01:7D:83:92:48:CF:07:ED:8C:71"
             ]
         }
     }

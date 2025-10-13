@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BetMGM Cashier Bridge</title>
+<link rel="manifest" href="manifest.json" />
+<script>
+/*
+==============================================================
+ TWA <-> Web Communication Bridge with Lifecycle Support
+==============================================================
+Handles:
+  - Page load events
+  - Foreground/background detection
+  - onPause/onStop/onResume/onDestroy equivalents
+  - Native overlay suppression logic
+==============================================================
+*/
+
+let port = undefined;
+let stopTimeout = null;
+const STOP_DELAY_MS = 3000; // Delay between pause → stop (ms)
+let ignoreHiddenEvents = false; // Controlled by native overlay visibility
+
+(function setupBridge() {
+  window.addEventListener("message", function (event) {
+    port = event.ports[0];
+    if (typeof port === 'undefined') return;
+
+    console.log("[Bridge] Port received from native");
+
+    // Send initial ON_PAGE_LOAD event
+    port.postMessage(JSON.stringify({
+      "eventName": "ON_PAGE_LOAD",
+      "parameters": {
+        "URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en",
+        "timestamp": Date.now()
+      }
+    }));
+
+    // Listen for incoming messages from native → web
+    port.onmessage = function(event) {
+      console.log("[Bridge] Received from native:", event.data);
+
+      try {
+        const msg = JSON.parse(event.data);
+        switch (msg.eventName) {
+          case "NATIVE_OVERLAY_SHOWN":
+            ignoreHiddenEvents = true;
+            console.log("[Bridge] Native overlay active — ignoring hidden events");
+            break;
+
+          case "NATIVE_OVERLAY_DISMISSED":
+            ignoreHiddenEvents = false;
+            console.log("[Bridge] Native overlay dismissed — resuming visibility tracking");
+            break;
+
+          default:
+            console.log("[Bridge] Unknown message:", msg.eventName);
+        }
+      } catch (e) {
+        console.error("[Bridge] Failed to parse incoming message:", e);
+      }
+    };
+  });
+})();
+
+/* ------------------------------------------------------------------
+   VISIBILITY-BASED LIFECYCLE HANDLERS (maps to Android lifecycles)
+-------------------------------------------------------------------*/
+
+document.addEventListener("visibilitychange", function() {
+  if (!port) return;
+
+  if (ignoreHiddenEvents) {
+    console.log("[Bridge] Ignoring visibilitychange due to active overlay");
+    return;
+  }
+
+  if (document.visibilityState === "hidden") {
+    console.log("[Bridge] Page hidden → sending ON_PAGE_PAUSE");
+    port.postMessage(JSON.stringify({
+      "eventName": "ON_PAGE_PAUSE",
+      "parameters": { "timestamp": Date.now() }
+    }));
+
+    // Schedule ON_PAGE_STOP if still hidden after delay
+    stopTimeout = setTimeout(() => {
+      if (document.visibilityState === "hidden" && !ignoreHiddenEvents) {
+        console.log("[Bridge] Page still hidden → sending ON_PAGE_STOP");
+        port.postMessage(JSON.stringify({
+          "eventName": "ON_PAGE_STOP",
+          "parameters": { "timestamp": Date.now() }
+        }));
+      }
+    }, STOP_DELAY_MS);
+
+  } else if (document.visibilityState === "visible") {
+    console.log("[Bridge] Page visible → sending ON_PAGE_RESUME");
+    port.postMessage(JSON.stringify({
+      "eventName": "ON_PAGE_RESUME",
+      "parameters": { "timestamp": Date.now() }
+    }));
+
+    // Cancel any pending stop event
+    if (stopTimeout) {
+      clearTimeout(stopTimeout);
+      stopTimeout = null;
+    }
+  }
+});
+
+/* ------------------------------------------------------------------
+   PAGE UNLOAD HANDLER (maps to Android onDestroy)
+-------------------------------------------------------------------*/
+window.addEventListener("beforeunload", function() {
+  if (!port) return;
+  console.log("[Bridge] Page unloading → sending ON_PAGE_DESTROY");
+  port.postMessage(JSON.stringify({
+    "eventName": "ON_PAGE_DESTROY",
+    "parameters": { "timestamp": Date.now() }
+  }));
+});
+
+/* ------------------------------------------------------------------
+   DEMO BUTTONS — Manual bridge event testing
+-------------------------------------------------------------------*/
+function myFunction1() {
+  if (!port) return;
+  port.postMessage(JSON.stringify({
+    "eventName": "ON_PAGE_LOAD1",
+    "parameters": {
+      "URL": "https://promo.nj.betmgm.com/en/promo/geolocator/sports?_nativeApp=sportsw&lang=en",
+      "timestamp": Date.now()
+    }
+  }));
+}
+
+function myFunction2() {
+  window.parent.postMessage(JSON.stringify({
+    "eventName": "ON_PAGE_LOAD2",
+    "parameters": { "timestamp": Date.now() }
+  }));
+}
+
+function myFunction3() {
+  window.postMessage(JSON.stringify({
+    "eventName": "ON_PAGE_LOAD3",
+    "parameters": { "timestamp": Date.now() }
+  }));
+}
+</script>
+</head>
+
+<body>
+  <h2>BetMGM Communication Bridge (TWA)</h2>
+  <p>Status: Running with lifecycle and overlay awareness</p>
+  <button onclick="myFunction1()">Send Event 1</button>
+  <button onclick="myFunction2()">Send Event 2</button>
+  <button onclick="myFunction3()">Send Event 3</button>
+  <input type="hidden" id="portValue" name="portValue" value="34657" />
+</body>
+</html>

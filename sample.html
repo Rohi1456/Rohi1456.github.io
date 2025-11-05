@@ -61,12 +61,22 @@ port.onmessage = function(event) {
   };
 
 }
+ function sendMessage() {
+    if ('postMessage' in navigator) {
+      navigator.postMessage("WEB_READY");
+      console.log("Sent: WEB_READY");
+    } else {
+      console.log("navigator.postMessage not supported");
+    }
+  }
 </script>
 </head>
 <body>
+<button onclick="sendMessage()">Send Post Message</button>
 <button onclick="myFunction1()">Click me 1</button>
 <button onclick="myFunction2()">Click me 2</button>
 <button onclick="myFunction3()">Click me 3</button>
+<Text onclick="myFunction4()">Click me 4</button>
 <input type="hidden" id="portValue" name="portValue" value="34657" />
 </body> 
 </html>

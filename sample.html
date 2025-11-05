@@ -59,12 +59,22 @@ port.onmessage = function(event) {
     console.log("[PostMessage1] Got message1" + event.data);
 
   };
+}
 
+function sendWebReadyPing() {
+  const channel = new MessageChannel();
+  channel.port1.onmessage = (event) => {
+    console.log("Android responded:", event.data);
+    // Optionally store twaPort here
+  };
+
+  // This will fail silently if Android isn't listening yet — that's okay
+  window.postMessage('web-ready', '*', [channel.port2]);
 }
 </script>
 </head>
 <body>
-<button onclick="window.location.href='twa://channel-ready'">Click me url</button>
+<button onclick="sendWebReadyPing()">send web ready</button>
 <button onclick="myFunction1()">Click me 1</button>
 <button onclick="myFunction2()">Click me 2</button>
 <button onclick="myFunction3()">Click me 3</button>
